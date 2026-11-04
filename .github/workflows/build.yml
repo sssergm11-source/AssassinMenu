@@ -1,4 +1,4 @@
-name: Android Build
+name: Android NDK Build
 
 on:
   push:
@@ -11,20 +11,19 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-
-    - name: Build with Gradle
+    - name: Download and Setup NDK
       run: |
-        chmod +x gradlew
-        ./gradlew assembleRelease
+        wget https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
+        unzip -q android-ndk-r25b-linux.zip
+        echo "ANDROID_NDK_HOME=$PWD/android-ndk-r25b" >> $GITHUB_ENV
 
-    - name: Upload APK
+    - name: Compile Native Code
+      run: |
+        cd app/src/main
+        $GITHUB_ENV/android-ndk-r25b/ndk-build || ./android-ndk-r25b/ndk-build
+
+    - name: Upload Built Library
       uses: actions/upload-artifact@v4
       with:
-        name: AssassinMenu-Release
-        path: app/build/outputs/apk/release/app-release.apk
-        
+        name: AssassinMenu-Library
+        path: app/src/main/libs/
